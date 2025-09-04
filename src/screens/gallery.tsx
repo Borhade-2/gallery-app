@@ -106,15 +106,26 @@ const Gallery = ({ navigation }: { navigation: any }) => {
 
   // Toggle favorite
   const toggleFavorite = (item: ImageItem) => {
-    if (!item.id) return;
-    setFavorites((prev) => {
-      const updated = prev.includes(item.id) ? prev.filter(f => f !== item.id) : [...prev, item.id];
-      AsyncStorage.setItem(FAVORITES_KEY, JSON.stringify(updated)).catch(err =>
-        console.log('Error saving favorites:', err)
-      );
-      return updated;
-    });
-  };
+  setFavorites(prev => {
+    const exists = prev.find(f => f.id === item.id);
+    let updated: ImageItem[];
+
+    if (exists) {
+      // Remove from favorites
+      updated = prev.filter(f => f.id !== item.id);
+    } else {
+      // Add to favorites
+      updated = [...prev, item];
+    }
+
+    AsyncStorage.setItem(FAVORITES_KEY, JSON.stringify(updated)).catch(err =>
+      console.log('Error saving favorites:', err)
+    );
+
+    return updated;
+  });
+};
+
 
   // Apply watermark
   const applyWatermark = async (uri: string) => {
@@ -176,7 +187,7 @@ const filteredImages = React.useMemo(() => {
         cachePolicy="disk"
       />
       <TouchableOpacity onPress={() => toggleFavorite(item)} style={styles.favButton}>
-        <Text style={styles.favText}>{favorites.includes(item.id) ? '❤️' : '🤍'}</Text>
+        <Text style={styles.favText}>{favorites.some(fav => fav?.id === item.id) ? '❤️' : '🤍'}</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={() => shareImage(item.img_url)} style={styles.shareButton}>
         <Text style={styles.actionText}>📤</Text>
